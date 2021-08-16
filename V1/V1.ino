@@ -5,8 +5,8 @@
 const int barkPin = 26;
 const int walkPin = 25;
 
-const char* ssid = "TALKTALK48237E";
-const char* password = "8Y4ETH64";
+const char* ssid = "";
+const char* password = "";
 
 WiFiServer server(420); //Creates the webserver object on port 420
 
