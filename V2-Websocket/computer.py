@@ -23,6 +23,7 @@ async def controllerCheck():
     joystick_threshold = 0.2
     joystick_sens = 45
     buttonTranslation = {"A": "A", "B": "B", "LEFT_SHOULDER": "LT", "RIGHT_SHOULDER": "RT"}
+    joystickIDS = ["L", "R"]
     events = get_events()
     for event in events:
         if event.type == 3:
@@ -31,9 +32,10 @@ async def controllerCheck():
             except KeyError:
                 print("Invalid input")
         elif event.type == 6:
-            if event.stick==0:
-                if event.value>joystick_threshold or (event.value*-1)>joystick_threshold:
-                    print(int(event.x*joystick_sens))
+            if event.value>joystick_threshold or (event.value*-1)>joystick_threshold:
+                joystick = joystickIDS[event.stick]
+                print(f"{joystick}X{int(event.x*joystick_sens)}")
+                print(f"{joystick}Y(int(event.y*joystick_sens)}")
 
     await asyncio.sleep(0.0001)
 
