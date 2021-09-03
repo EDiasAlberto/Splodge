@@ -1,13 +1,16 @@
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <WebSocketServer.h>
+#include <ESP32Servo.h>
 
+Servo servo1, servo2;
 
+int pos1 = 90, pos2 = 90;
 
-const int barkPin = 26;
-const int walkPin = 25;
-const char* ssid = "";
-const char* password = "";
+const int servoPin1 = 26;
+const int servoPin2 = 25;
+const char* ssid = "TALKTALK48237E";
+const char* password = "8Y4ETH64";
 
 WiFiServer server(420);
 WebSocketServer webSocket; //Creates the webserver object on port 420
@@ -17,34 +20,33 @@ unsigned long previousTime = 0;
 const long timeoutTime = 5000;
 
 
-
-
-void buttonPress(int pin){
-  Serial.printf("%i is High\n", pin);
-  digitalWrite(pin, HIGH);
-  delay(100);
-  Serial.printf("%i is Low\n", pin);
-  digitalWrite(pin, LOW);
-}
-
 void handleData(String message){
-  Serial.println(message);
-  if(message == "A"){
-    buttonPress(walkPin);
+  if(message=="LT"){
+    pos1 = min(pos1+10, 180);
+    servo1.write(pos1);
+  } else if(message=="RT"){
+    pos2 = min(pos2+10, 180);
+    servo2.write(pos2);
+  } else if(message=="A"){
+    pos1 = max(pos1-10, 0);
+    servo1.write(pos1);
   } else if(message=="B"){
-    buttonPress(barkPin);
+    pos2 = max(pos2-10, 0);
+    servo2.write(pos2);
   } else {
-    Serial.println("Invalid input");
+    Serial.println("Invalid button");
   }
 }
 
 
 void setup() {
   Serial.begin(115200);
-  pinMode(barkPin, OUTPUT);
-  pinMode(walkPin, OUTPUT);
-  digitalWrite(barkPin, LOW);
-  digitalWrite(walkPin, LOW);
+
+  servo1.attach(servoPin1, 500, 4000);   
+  servo1.write(90);
+
+  servo2.attach(servoPin2, 500, 4000);   
+  servo2.write(90);
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -70,7 +72,10 @@ void loop() {
       data = webSocket.getData();
  
       if (data.length() > 0) {
+         webSocket.sendData("Hello.");
          handleData(data);
+         webSocket.sendData((String)pos1);
+         webSocket.sendData((String)pos2);
 
       }
  
@@ -78,9 +83,7 @@ void loop() {
    }
  
    Serial.println("The client disconnected");
-   delay(100);
   }
+  delay(10);
  
-  delay(100);
-  
 }

@@ -11,24 +11,38 @@ async def sendSrvMsg(btn):
     async with websockets.connect(serverURL) as server:
         await server.send(btn)
         print(f"Sent button: {btn}")
+        response = await server.recv()
+        pos1 = await server.recv()
+        pos2 = await server.recv()
+        print("-------------------------------")
+        print(f"Position 1: {pos1}")
+        print(f"Position 2: {pos2}")
 
 
 async def controllerCheck():
+    joystick_threshold = 0.2
+    joystick_sens = 45
+    buttonTranslation = {"A": "A", "B": "B", "LEFT_SHOULDER": "LT", "RIGHT_SHOULDER": "RT"}
     events = get_events()
     for event in events:
         if event.type == 3:
-            if event.button == "A":
-                await sendSrvMsg("A")
-            elif event.button == "B":
-                await sendSrvMsg("B")
-            else:
-                print("ooga booga monke no know how button work")
+            try:
+                await sendSrvMsg(buttonTranslation[event.button])
+            except KeyError:
+                print("Invalid input")
+        elif event.type == 6:
+            if event.stick==0:
+                if event.value>joystick_threshold or (event.value*-1)>joystick_threshold:
+                    print(int(event.x*joystick_sens))
+
     await asyncio.sleep(0.0001)
 
 async def main():
     while True:
         task1 = loop.create_task(controllerCheck())
         await asyncio.wait([task1])
+
+
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
