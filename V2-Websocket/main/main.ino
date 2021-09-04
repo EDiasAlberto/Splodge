@@ -3,9 +3,9 @@
 #include <WebSocketServer.h>
 #include <ESP32Servo.h>
 
-Servo servo1, servo2;
+Servo LXServo, LYServo;
 
-int pos1 = 90, pos2 = 90;
+int xpos = 90, ypos = 90;
 
 const int servoPin1 = 26;
 const int servoPin2 = 25;
@@ -21,20 +21,33 @@ const long timeoutTime = 5000;
 
 
 void handleData(String message){
-  if(message=="LT"){
-    pos1 = min(pos1+10, 180);
-    servo1.write(pos1);
-  } else if(message=="RT"){
-    pos2 = min(pos2+10, 180);
-    servo2.write(pos2);
-  } else if(message=="A"){
-    pos1 = max(pos1-10, 0);
-    servo1.write(pos1);
-  } else if(message=="B"){
-    pos2 = max(pos2-10, 0);
-    servo2.write(pos2);
-  } else {
-    Serial.println("Invalid button");
+  if(message[0] == 'L'){
+    int posChange = message.substring(2).toInt();
+    switch(message[1]) {
+      case 'X':
+        if(xpos + posChange > 180){
+          xpos = 180;
+        } else if(xpos + posChange < 0){
+          xpos = 0;
+        } else {
+          xpos += posChange;
+        }
+        LXServo.write(xpos);
+        break;
+      case 'Y':
+        if(ypos + posChange > 180){
+          ypos = 180;
+        } else if(ypos + posChange < 0){
+          ypos = 0;
+        } else {
+          ypos += posChange;
+        }
+        LYServo.write(ypos);
+        break;
+      default:
+        Serial.println("INVALID INPUT");
+    }
+
   }
 }
 
@@ -42,11 +55,11 @@ void handleData(String message){
 void setup() {
   Serial.begin(115200);
 
-  servo1.attach(servoPin1, 500, 4000);   
-  servo1.write(90);
+  LXServo.attach(servoPin1, 500, 4000);   
+  LXServo.write(90);
 
-  servo2.attach(servoPin2, 500, 4000);   
-  servo2.write(90);
+  LYServo.attach(servoPin2, 500, 4000);   
+  LYServo.write(90);
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -74,8 +87,8 @@ void loop() {
       if (data.length() > 0) {
          webSocket.sendData("Hello.");
          handleData(data);
-         webSocket.sendData((String)pos1);
-         webSocket.sendData((String)pos2);
+         webSocket.sendData((String)xpos);
+         webSocket.sendData((String)ypos);
 
       }
  
